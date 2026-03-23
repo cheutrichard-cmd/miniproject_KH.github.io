@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <title>ហាងមីហឹរ</title>
+<style>
+/* General body styling */
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  padding: 20px;
+  margin: 0;
+}
+
+/* Centered heading */
+h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Menu and cart containers */
+.menu, .cart {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* subtle shadow for depth */
+}
+
+/* Item layout */
+.item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* Item images */
+.item img {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+/* Name alignment and word wrap */
+.item .name {
+  flex: 1;
+  max-width: 180px;
+  word-break: break-word;
+}
+
+/* Buttons */
+button {
+     margin-left: 100px;
+
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  transform: translateX(10px); /* move 10px forward */
+  transition: background 0.2s, transform 0.2s;
+ }
+
+.add {
+  background: black;
+  color: white;
+}
+
+.add:hover {
+  background: #333;
+  transform: translateX(12px); /* slightly more on hover */
+}
+
+.remove {
+  background: red;
+  color: white;
+}
+
+.remove:hover {
+  background: #cc0000;
+  transform: translateX(12px);
+}
+
+.submit {
+  background: green;
+  color: white;
+  width: 100%;
+  padding: 10px;
+  transform: translateX(10px);
+}
+
+input {
+  width: 50px;
+  text-align: center;
+  padding: 3px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+/* Responsive tweak: stack items on small screens */
+@media (max-width: 400px) {
+  .item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .item .name {
+    max-width: 100%;
+  }
+}
+</style>
+
+</head>
+
+<body>
+
+<h1>
+  <img src="logo.jpg" style="width:50px; vertical-align:middle;">
+  ហាងមីហឹរខ្ខប់
+</h1>
+
+<div class="menu">
+  <h2>Menu</h2>
+  <div id="menu"></div>
+</div>
+
+<div class="cart">
+  <h2>🛒 ការកុម្ម៉ង់</h2>
+  <div id="cart"></div>
+  <h3 id="total">Total: $0</h3>
+</div>
+
+<button class="submit" onclick="submitOrder()">Submit Order</button>
+
+<div class="cart" id="receipt" style="display:none;"></div>
+
+<script>
+const menuData = [
+  { id:1, name:"មីហឹរ សាច់គោ", price:2.5, image:"sach_ko.jpg" },
+  { id:2, name:"មីហឹរ បង្គា", price:3.0, image:"shrim.jpg" },
+  { id:3, name:"មីហឹរ ប្រហិតសុទ្ធវែងៗ", price:2.5, image:"hotdog.jpg" },
+];
+
+let cart = [];
+
+function renderMenu(){
+  const menu = document.getElementById("menu");
+  menu.innerHTML = "";
+
+  menuData.forEach(item=>{
+    menu.innerHTML += `
+      <div class="item">
+        <img src="${item.image}">
+        <span class="name">${item.name}</span>
+        <span>$${item.price}</span>
+        <button class="add" onclick="addToCart(${item.id})">Add</button>
+      </div>
+    `;
+  });
+}
+
+function addToCart(id){
+  const item = menuData.find(i=>i.id===id);
+  const exist = cart.find(i=>i.id===id);
+
+  if(exist){
+    exist.qty++;
+  } else {
+    cart.push({...item, qty:1});
+  }
+
+  renderCart();
+}
+
+function removeItem(id){
+  cart = cart.filter(i=>i.id!==id);
+  renderCart();
+}
+
+function updateQty(id, qty){
+  const item = cart.find(i=>i.id===id);
+
+  qty = parseInt(qty);
+
+  if(isNaN(qty) || qty < 1){
+    qty = 1;
+  }
+
+  item.qty = qty;
+  renderCart();
+}
+
+function renderCart(){
+  const cartDiv = document.getElementById("cart");
+  cartDiv.innerHTML = "";
+
+  let total = 0;
+
+  cart.forEach(item=>{
+    total += item.price * item.qty;
+
+    cartDiv.innerHTML += `
+      <div class="item">
+        <img src="${item.image}">
+        <span class="name">${item.name}</span>
+
+        <button onclick="updateQty(${item.id}, ${item.qty - 1})">-</button>
+
+        <input type="number" value="${item.qty}" min="1"
+          oninput="updateQty(${item.id}, this.value)">
+
+        <button onclick="updateQty(${item.id}, ${item.qty + 1})">+</button>
+
+        <span>$${(item.price * item.qty).toFixed(2)}</span>
+
+        <button class="remove" onclick="removeItem(${item.id})">X</button>
+      </div>
+    `;
+  });
+
+  document.getElementById("total").innerText =
+    "Total: $" + total.toFixed(2);
+}
+
+function submitOrder(){
+  const receipt = document.getElementById("receipt");
+  receipt.style.display = "block";
+
+  let html = "<h2>🧾 Receipt</h2>";
+  let total = 0;
+
+  cart.forEach(item=>{
+    const sub = item.price * item.qty;
+    total += sub;
+
+    html += `
+      <div class="item">
+        <img src="${item.image}">
+        <span>${item.name} x ${item.qty} = $${sub.toFixed(2)}</span>
+      </div>
+    `;
+  });
+
+  html += `<h3>Total: $${total.toFixed(2)}</h3>`;
+
+  receipt.innerHTML = html;
+
+  cart = [];
+  renderCart();
+}
+
+renderMenu();
+</script>
+
+</body>
+</html>

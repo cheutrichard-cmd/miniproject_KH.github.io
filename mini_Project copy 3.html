@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+  <meta charset="UTF-8">
+  <title>ហាងមីហឹរ - Food Delivery Style</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+      margin: 0;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #333;
+    }
+
+    h1 img {
+      width: 50px;
+      vertical-align: middle;
+      margin-right: 10px;
+    }
+
+    .menu, .cart {
+      background: white;
+      padding: 20px;
+      border-radius: 15px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    .item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding: 10px;
+      border-radius: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .item img {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .name {
+      flex: 1;
+      margin-left: 15px;
+      font-weight: bold;
+      word-break: break-word;
+    }
+
+    .price {
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 5px;
+      align-items: center;
+    }
+
+    /* Buttons */
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+      min-width: 60px;
+    }
+
+    .add {
+      background: linear-gradient(90deg, #ff7e5f, #feb47b);
+      color: white;
+    }
+
+    .add:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255,126,95,0.4);
+    }
+
+    .remove {
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+      color: white;
+    }
+
+    .remove:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(255,65,108,0.4);
+    }
+
+    button.qty-btn {
+      background: #eee;
+      color: #333;
+    }
+
+    button.qty-btn:hover {
+      background: #ddd;
+    }
+
+    .submit {
+      background: linear-gradient(90deg, #11998e, #38ef7d);
+      color: white;
+      width: 100%;
+      padding: 14px;
+      font-size: 18px;
+      font-weight: bold;
+      border-radius: 12px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .submit:hover {
+      transform: scale(1.02);
+      box-shadow: 0 6px 20px rgba(56,239,125,0.4);
+    }
+
+    input[type="number"] {
+      width: 50px;
+      text-align: center;
+      padding: 5px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    @media (max-width: 500px) {
+      .item {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .actions {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
+      }
+
+      button {
+        flex: 1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<h1>
+  <img src="logo.jpg" alt="Logo"> ហាងមីហឹរខ្ខប់
+</h1>
+
+<div class="menu">
+  <h2>Menu</h2>
+  <div id="menu"></div>
+</div>
+
+<div class="cart">
+  <h2>🛒 ការកុម្ម៉ង់</h2>
+  <div id="cart"></div>
+  <h3 id="total">Total: $0</h3>
+</div>
+
+<button class="submit" onclick="submitOrder()">Submit Order</button>
+
+<div class="cart" id="receipt" style="display:none;"></div>
+
+<script>
+const menuData = [
+  { id:1, name:"មីហឹរ សាច់គោ", price:2.5, image:"sach_ko.jpg" },
+  { id:2, name:"មីហឹរ បង្គា", price:3.0, image:"shrim.jpg" },
+  { id:3, name:"មីហឹរ ប្រហិតសុទ្ធ", price:2.5, image:"hotdog.jpg" },
+  { id:3, name:"បន្ថែម ប្រហិតត្រី", price:0.75, image:"2.jpg" },
+  { id:4, name:"បន្ថែម បង្គា", price:1, image:"1.png" },
+  { id:5, name:"បន្ថែម ហតដក", price:0.75, image:"3.jpg" },
+  { id:6, name:"បន្ថែម ផ្សិតម្ជុល", price:0.75, image:"4.jpg" },
+  { id:7, name:"បន្ថែម បន្លែ", price:0.75, image:"5.jpg" },
+  { id:8, name:"បន្ថែម ស្ទីងក្រហម", price:0.50, image:"6.jpg" },
+  { id:9, name:"បន្ថែម កូកាកូឡា", price:0.50, image:"7.jpg" },
+  { id:10, name:"បន្ថែម ទឺកបរិសុទ្ធ", price:0.25, image:"8.jpg" },
+  
+    
+    
+
+];
+
+let cart = [];
+
+function renderMenu(){
+  const menu = document.getElementById("menu");
+  menu.innerHTML = "";
+  menuData.forEach(item=>{
+    menu.innerHTML += `
+      <div class="item">
+        <img src="${item.image}" alt="${item.name}">
+        <span class="name">${item.name}</span>
+        <span class="price">$${item.price}</span>
+        <div class="actions">
+          <button class="add" onclick="addToCart(${item.id})">Add</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function addToCart(id){
+  const item = menuData.find(i=>i.id===id);
+  const exist = cart.find(i=>i.id===id);
+
+  if(exist){
+    exist.qty++;
+  } else {
+    cart.push({...item, qty:1});
+  }
+  renderCart();
+}
+
+function removeItem(id){
+  cart = cart.filter(i=>i.id!==id);
+  renderCart();
+}
+
+function updateQty(id, qty){
+  const item = cart.find(i=>i.id===id);
+  qty = parseInt(qty);
+  if(isNaN(qty) || qty < 1) qty = 1;
+  item.qty = qty;
+  renderCart();
+}
+
+function renderCart(){
+  const cartDiv = document.getElementById("cart");
+  cartDiv.innerHTML = "";
+  let total = 0;
+  cart.forEach(item=>{
+    total += item.price * item.qty;
+    cartDiv.innerHTML += `
+      <div class="item">
+        <img src="${item.image}" alt="${item.name}">
+        <span class="name">${item.name}</span>
+        <div class="actions">
+          <button class="qty-btn" onclick="updateQty(${item.id}, ${item.qty - 1})">-</button>
+          <input type="number" value="${item.qty}" min="1" oninput="updateQty(${item.id}, this.value)">
+          <button class="qty-btn" onclick="updateQty(${item.id}, ${item.qty + 1})">+</button>
+          <button class="remove" onclick="removeItem(${item.id})">X</button>
+        </div>
+        <span class="price">$${(item.price * item.qty).toFixed(2)}</span>
+      </div>
+    `;
+  });
+  document.getElementById("total").innerText = "Total: $" + total.toFixed(2);
+}
+
+function submitOrder(){
+  const receipt = document.getElementById("receipt");
+  receipt.style.display = "block";
+  let html = "<h2>🧾 Receipt</h2>";
+  let total = 0;
+  cart.forEach(item=>{
+    const sub = item.price * item.qty;
+    total += sub;
+    html += `
+      <div class="item">
+        <img src="${item.image}" alt="${item.name}">
+        <span>${item.name} x ${item.qty} = $${sub.toFixed(2)}</span>
+      </div>
+    `;
+  });
+  html += `<h3>Total: $${total.toFixed(2)}</h3>`;
+  receipt.innerHTML = html;
+  cart = [];
+  renderCart();
+}
+
+renderMenu();
+</script>
+
+</body>
+</html>
